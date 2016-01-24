@@ -1,4 +1,6 @@
 import React, {
+  Animated,
+  Easing,
   Component,
   StyleSheet,
   Text,
@@ -6,6 +8,7 @@ import React, {
 } from 'react-native'
 
 import Dimensions from 'Dimensions'
+import _ from 'lodash'
 
 const {width, height} = Dimensions.get('window')
 
@@ -17,30 +20,62 @@ const TITLE_SIZE = CELL_SIZE - CELL_PADDING * 2
 const LETTER_SIZE = Math.floor(TITLE_SIZE * 0.75)
 
 export default class BoardView extends Component {
+  constructor (props) {
+    super(props)
+
+    this.state = {
+      tilt: _.range(SIZE * SIZE).map(item => new Animated.Value(0))
+    }
+  }
+
   render () {
     return <View style={styles.container}>
       {this.renderTiles()}
     </View>
   }
 
+  clickTile (id) {
+    const tilt = this.state.tilt[id]
+    tilt.setValue(1)  // -30 degrees
+    Animated.timing(tilt, {
+      toValue: 0, // 0 degrees
+      duration: 250, // [ms]
+      easing: Easing.quad // quadratic easing function: (t) => t * t
+    }).start()
+  }
+
   renderTiles () {
     const result = []
     for (let row = 0; row < SIZE; row++) {
       for (let col = 0; col < SIZE; col++) {
-        const key = row * SIZE + col;
-        const letter = String.fromCharCode(65 + key)
+        const id = row * SIZE + col;
+        const letter = String.fromCharCode(65 + id)
+        const tilt = this.state.tilt[id].interpolate({
+          inputRange: [0, 1],
+          outputRange: ['0deg', '-30deg']
+        })
         const position = {
           left: col * CELL_SIZE + CELL_PADDING,
-          top: row * CELL_SIZE + CELL_PADDING
+          top: row * CELL_SIZE + CELL_PADDING,
+          transform: [
+            {perspective: CELL_SIZE * 8},
+            {rotateX: tilt}
+          ]
         }
-        result.push(
-          <View key={key} style={[styles.title, position]}>
-            <Text style={styles.letter}>{letter}</Text>
-          </View>
-        )
+        result.push(this.renderTile(id, position, letter))
       }
     }
     return result
+  }
+
+  renderTile (id, position, letter) {
+    return <Animated.View
+      key={id}
+      style={[styles.title, position]}
+      onStartShouldSetResponder={() => this.clickTile(id)}
+    >
+      <Text style={styles.letter}>{letter}</Text>
+    </Animated.View>
   }
 }
 
