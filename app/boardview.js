@@ -7,17 +7,15 @@ import React, {
   View
 } from 'react-native'
 
-import Dimensions from 'Dimensions'
 import _ from 'lodash'
 
-const {width, height} = Dimensions.get('window')
+import {
+  SIZE,
+  CELL_SIZE,
+  CELL_PADDING
+} from './constants'
 
-const SIZE = 4
-const CELL_SIZE = Math.floor(width * 0.2)
-const CELL_PADDING = Math.floor(CELL_SIZE * 0.05)
-const BORDER_RADIUS = CELL_PADDING * 2
-const TITLE_SIZE = CELL_SIZE - CELL_PADDING * 2
-const LETTER_SIZE = Math.floor(TITLE_SIZE * 0.75)
+import Tile from './tile'
 
 export default class BoardView extends Component {
   constructor (props) {
@@ -28,12 +26,6 @@ export default class BoardView extends Component {
     }
   }
 
-  render () {
-    return <View style={styles.container}>
-      {this.renderTiles()}
-    </View>
-  }
-
   clickTile (id) {
     const tilt = this.state.tilt[id]
     tilt.setValue(1)  // -30 degrees
@@ -42,6 +34,12 @@ export default class BoardView extends Component {
       duration: 250, // [ms]
       easing: Easing.quad // quadratic easing function: (t) => t * t
     }).start()
+  }
+
+  render () {
+    return <View style={styles.container}>
+      {this.renderTiles()}
+    </View>
   }
 
   renderTiles () {
@@ -61,19 +59,15 @@ export default class BoardView extends Component {
             {rotateX: tilt}
           ]
         }
-        return this.renderTile(id, style, letter)
+        return <Tile
+          id={id}
+          customStyle={style}
+          onClick={this.clickTile.bind(this)}
+        >
+          {letter}
+        </Tile>
       })
     })
-  }
-
-  renderTile (id, position, letter) {
-    return <Animated.View
-      key={id}
-      style={[styles.title, position]}
-      onStartShouldSetResponder={() => this.clickTile(id)}
-    >
-      <Text style={styles.letter}>{letter}</Text>
-    </Animated.View>
   }
 }
 
@@ -81,21 +75,6 @@ const styles = StyleSheet.create({
   container: {
     width: CELL_SIZE * SIZE,
     height: CELL_SIZE * SIZE,
-    backgroundColor: 'transparent'
-  },
-  title: {
-    position: 'absolute',
-    width: TITLE_SIZE,
-    height: TITLE_SIZE,
-    borderRadius: BORDER_RADIUS,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#BEE1D2'
-  },
-  letter: {
-    color: '#333',
-    fontSize: LETTER_SIZE,
-    fontFamily: 'Roboto',
     backgroundColor: 'transparent'
   }
 })
