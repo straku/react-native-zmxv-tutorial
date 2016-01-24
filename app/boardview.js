@@ -45,16 +45,15 @@ export default class BoardView extends Component {
   }
 
   renderTiles () {
-    const result = []
-    for (let row = 0; row < SIZE; row++) {
-      for (let col = 0; col < SIZE; col++) {
-        const id = row * SIZE + col;
+    return _.range(SIZE).map(row => {
+      return _.range(SIZE).map(col => {
+        const id = row * SIZE + col
         const letter = String.fromCharCode(65 + id)
         const tilt = this.state.tilt[id].interpolate({
           inputRange: [0, 1],
           outputRange: ['0deg', '-30deg']
         })
-        const position = {
+        const style = {
           left: col * CELL_SIZE + CELL_PADDING,
           top: row * CELL_SIZE + CELL_PADDING,
           transform: [
@@ -62,10 +61,9 @@ export default class BoardView extends Component {
             {rotateX: tilt}
           ]
         }
-        result.push(this.renderTile(id, position, letter))
-      }
-    }
-    return result
+        return this.renderTile(id, style, letter)
+      })
+    })
   }
 
   renderTile (id, position, letter) {
